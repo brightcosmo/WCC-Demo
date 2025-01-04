@@ -10,16 +10,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/distance")
+@RequestMapping("/api/postcodes")
 public class PostalCodeController {
 
     @Autowired
     private PostalCodeService postalCodeService;
 
-    @GetMapping
-    public Map<String, Object> getDistance(@RequestParam String postcode1, @RequestParam String postcode2) {
-        PostalCode location1 = postalCodeService.lookupPostalCode(postcode1);
-        PostalCode location2 = postalCodeService.lookupPostalCode(postcode2);
+    @GetMapping("/distance")
+    public Map<String, Object> getDistance(@RequestParam String from, @RequestParam String to) {
+        PostalCode location1 = postalCodeService.lookupPostalCode(from);
+        PostalCode location2 = postalCodeService.lookupPostalCode(to);
 
         Map<String, Object> response = new HashMap<>();
         if (location1 == null || location2 == null) {
@@ -27,13 +27,15 @@ public class PostalCodeController {
             return response;
         }
 
-        double distance = postalCodeService.calculateDistance(location1.getLatitude(), location1.getLongitude(),
-                location2.getLatitude(), location2.getLongitude());
+        double distance = postalCodeService.calculateDistance(
+            location1.getLatitude(), location1.getLongitude(),
+            location2.getLatitude(), location2.getLongitude()
+        );
 
-        response.put("postcode1", postcode1);
+        response.put("postcode1", from);
         response.put("latitude1", location1.getLatitude());
         response.put("longitude1", location1.getLongitude());
-        response.put("postcode2", postcode2);
+        response.put("postcode2", to);
         response.put("latitude2", location2.getLatitude());
         response.put("longitude2", location2.getLongitude());
         response.put("distance", distance);

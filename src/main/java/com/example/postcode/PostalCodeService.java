@@ -2,6 +2,10 @@ package com.example.postcode;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,10 +16,36 @@ public class PostalCodeService {
 
     public PostalCodeService() {
         postcodeMap = new HashMap<>();
-        // Add postcode data manually or load from CSV or database here
-        // Example:
-        postcodeMap.put("SW1A1AA", new PostalCode("SW1A1AA", 51.501009, -0.141588));
-        postcodeMap.put("EH1 1BB", new PostalCode("EH1 1BB", 55.953251, -3.188267));
+    }
+
+    @PostConstruct
+    public void loadPostalCodesFromCsv() {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(getClass().getResourceAsStream("/ukpostcodes.csv")))) {
+            
+            String line;
+            boolean header = true;
+
+            while ((line = br.readLine()) != null) {
+                // Skip header line
+                if (header) {
+                    header = false;
+                    continue;
+                }
+
+                String[] parts = line.split(",");
+                
+                if (parts.length == 4) {
+                    String postcode = parts[1].trim();  // Postcode in second column
+                    double latitude = Double.parseDouble(parts[2].trim());
+                    double longitude = Double.parseDouble(parts[3].trim());
+                    
+                    postcodeMap.put(postcode, new PostalCode(postcode, latitude, longitude));
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load postal codes from CSV", e);
+        }
     }
 
     public PostalCode lookupPostalCode(String postcode) {
